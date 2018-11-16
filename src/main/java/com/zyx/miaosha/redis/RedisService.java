@@ -18,34 +18,95 @@ import redis.clients.jedis.JedisPoolConfig;
 public class RedisService {
     @Autowired
     JedisPool jedisPool;
-    @Autowired
-    RedisConfig redisConfig;
-   public <T> T get(String key,Class<T> clazz){
+
+    /**
+     * 获取对象
+     * @param prefix
+     * @param key
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+
+   public <T> T get(KeyPrefix prefix,String key,Class<T> clazz){
         Jedis jedis=null;
       try {
           jedis=jedisPool.getResource();
-          String str=jedis.get(key);
+          //生成真的key
+          String relkey=prefix.getPrefix()+key;
+          String str=jedis.get(relkey);
           T t=stringToBean(str,clazz);
           return t;
 
       }finally {
-       returnToPool(jedisPool);
+       returnToPool(jedis);
       }
    }
 
-    public <T> boolean set(String key,Class<T> clazz){
+    public <T> boolean set(KeyPrefix prefix,String key,T value){
         Jedis jedis=null;
         try {
             jedis=jedisPool.getResource();
 
-       //  jedis.set(key,clazz);
-       //     T t=stringToBean(str,clazz);
+     String str=beanToString(value);
+     if(str==null||str.length()<=0){
+         return false;
+     }
+            //生成真的key
+            String relkey=prefix.getPrefix()+key;
+           int seconds= prefix.expireSeconds();
+           if(seconds<=0){
+               jedis.set(relkey,str);
+           }else {
+               jedis.setex(relkey,seconds,str);
+           }
+
             return true;
 
         }finally {
-            returnToPool(jedisPool);
+            returnToPool(jedis);
         }
     }
+//判断key是否存在
+    public <T> boolean exists(KeyPrefix prefix,String key){
+        Jedis jedis=null;
+        try {
+            jedis=jedisPool.getResource();
+
+            //生成真的key
+            String relkey=prefix.getPrefix()+key;
+           return jedis.exists(relkey);
+        }finally {
+            returnToPool(jedis);
+        }
+    }
+  //增加key
+    public <T> Long incr(KeyPrefix prefix,String key){
+        Jedis jedis=null;
+        try {
+            jedis=jedisPool.getResource();
+
+            //生成真的key
+            String relkey=prefix.getPrefix()+key;
+            return jedis.incr(relkey);
+        }finally {
+            returnToPool(jedis);
+        }
+    }
+  //减少key
+    public <T> Long decr(KeyPrefix prefix,String key){
+        Jedis jedis=null;
+        try {
+            jedis=jedisPool.getResource();
+
+            //生成真的key
+            String relkey=prefix.getPrefix()+key;
+            return jedis.decr(relkey);
+        }finally {
+            returnToPool(jedis);
+        }
+    }
+
 
     private <T> String beanToString(T value) {
         if (value==null){
@@ -79,21 +140,11 @@ public class RedisService {
         }
     }
 
-    private void returnToPool(JedisPool jedisPool) {
-       if (jedisPool!=null){
-           jedisPool.close();
+    private void returnToPool(Jedis jedis) {
+       if (jedis!=null){
+           jedis.close();
        }
     }
 
-    @Bean
-    public JedisPool jedisPoolFactory(){
 
-       JedisPoolConfig jedisPoolConfig=new JedisPoolConfig();
-       jedisPoolConfig.setMaxIdle(redisConfig.getPoolMaxIdle());
-       jedisPoolConfig.setMaxTotal(redisConfig.getPoolMaxTotal());
-       jedisPoolConfig.setMaxWaitMillis(redisConfig.getPoolMaxWait()*1000);
-     JedisPool jedisPool=new JedisPool(jedisPoolConfig,redisConfig.getHost(),redisConfig.getPort()
-             ,redisConfig.getTimeout()*1000,null,0,null);
-     return  jedisPool;
-   }
 }
