@@ -48,6 +48,7 @@ public class UserArguementResover implements HandlerMethodArgumentResolver {
               return null;
           }
         String token=StringUtils.isEmpty(paramtoken)?cookietoken:paramtoken;
+
         return  miaoshaUserService.getByToken(response,token);
     }
 

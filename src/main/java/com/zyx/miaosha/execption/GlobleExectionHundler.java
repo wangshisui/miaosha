@@ -22,7 +22,7 @@ public class GlobleExectionHundler {
 
     @ExceptionHandler(value = Exception.class)
     public Result<String> exceptionHundler(HttpServletRequest request,Exception e){
-
+e.printStackTrace();
         if(e instanceof GlobelException){
             GlobelException g= (GlobelException) e;
             return Result.error(g.getCm());
