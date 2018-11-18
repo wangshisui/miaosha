@@ -46,7 +46,7 @@ public class RedisService {
     public <T> boolean set(KeyPrefix prefix,String key,T value){
         Jedis jedis=null;
         try {
-            jedis=jedisPool.getResource();
+         jedis=jedisPool.getResource();
 
      String str=beanToString(value);
      if(str==null||str.length()<=0){
@@ -89,6 +89,21 @@ public class RedisService {
             //生成真的key
             String relkey=prefix.getPrefix()+key;
             return jedis.incr(relkey);
+        }finally {
+            returnToPool(jedis);
+        }
+    }
+
+    //删除delete
+    public boolean delete(KeyPrefix prefix,String key){
+        Jedis jedis=null;
+        try {
+            jedis=jedisPool.getResource();
+
+            //生成真的key
+            String relkey=prefix.getPrefix()+key;
+            long ret= jedis.del(relkey);
+            return ret>0;
         }finally {
             returnToPool(jedis);
         }

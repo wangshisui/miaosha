@@ -18,4 +18,8 @@ public class MiaoshaUserKey extends BasePrefix {
 
     public static MiaoshaUserKey token=new MiaoshaUserKey(TIKEN_EXISTS,"tk");
 
+    public static MiaoshaUserKey getById=new MiaoshaUserKey(0,"tk");
+
+
+
 }

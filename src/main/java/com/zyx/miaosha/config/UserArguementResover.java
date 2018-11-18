@@ -1,12 +1,13 @@
 package com.zyx.miaosha.config;
 
+import com.sun.istack.internal.Nullable;
 import com.zyx.miaosha.domain.MiaoshaUser;
-import com.zyx.miaosha.redis.MiaoshaUserKey;
+
 import com.zyx.miaosha.service.MiaoshaUserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.servlet.server.Session;
+
 import org.springframework.core.MethodParameter;
-import org.springframework.lang.Nullable;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -54,6 +55,9 @@ public class UserArguementResover implements HandlerMethodArgumentResolver {
 
     private String getCookieValue(HttpServletRequest request, String cookieNameToken) {
         Cookie[] cookies   =request.getCookies();
+        if(cookies==null||cookies.length<=0){
+           return null;
+        }
         for(Cookie cookie:cookies){
             if(cookie.getName().equals(cookieNameToken)){
                 return cookie.getValue();

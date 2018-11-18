@@ -5,6 +5,8 @@ import com.zyx.miaosha.domain.MiaoshaOrder;
 import com.zyx.miaosha.domain.MiaoshaUser;
 import com.zyx.miaosha.domain.OrderInfo;
 import com.zyx.miaosha.enums.OrderEnumStatus;
+import com.zyx.miaosha.redis.OrderKey;
+import com.zyx.miaosha.redis.RedisService;
 import com.zyx.miaosha.vo.GoodsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,10 +24,17 @@ public class OrderService {
 
     @Autowired
     private OrderDao orderDao;
+    @Autowired
+    private OrderService orderService;
+    @Autowired
+    RedisService redisService;
   //判断用户有没有秒杀到商品
     public MiaoshaOrder getMiaoshaOrderByUserIdGoodsId(Long userId, Long goodsId) {
 
-        return orderDao.getMiaoshaOrderByUserIdGoodsId(userId,goodsId);
+//        return orderDao.getMiaoshaOrderByUserIdGoodsId(userId,goodsId);
+         return redisService.get(OrderKey.getMiaoshaOrderByUidGid,""+goodsId+"_"+userId,MiaoshaOrder.class);
+
+
     }
     //减少库存后生成订单
     @Transactional
@@ -51,6 +60,11 @@ public class OrderService {
         miaoshaOrder.setOrderId(orderId);
         miaoshaOrder.setUserId(user.getId());
         orderDao.insertMiaoshaOrder(miaoshaOrder);
+        redisService.set(OrderKey.getMiaoshaOrderByUidGid,""+goodsVo.getId()+"_"+user.getId(),miaoshaOrder);
         return orderInfo;
+    }
+    //根据id查询订单
+    public OrderInfo getOrderById(long orderId) {
+       return orderDao.getOrderById(orderId);
     }
 }
